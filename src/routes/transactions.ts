@@ -2,7 +2,6 @@ import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { knex } from '../database'
 import crypto from 'node:crypto'
-import { json } from 'node:stream/consumers'
 
 export async function transactionsRoutes(app: FastifyInstance) {
   app.get('/', async () => {
