@@ -2,6 +2,7 @@ import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { knex } from '../database'
 import crypto from 'node:crypto'
+import { json } from 'node:stream/consumers'
 
 export async function transactionsRoutes(app: FastifyInstance) {
   app.get('/', async () => {
@@ -29,6 +30,14 @@ export async function transactionsRoutes(app: FastifyInstance) {
     return {
       transaction,
     }
+  })
+
+  app.get('/summary', async () => {
+    const summary = knex('transactions')
+      .sum('amount', { as: 'ammount' })
+      .first()
+
+    return summary
   })
 
   app.post('/', async (request, reply) => {
