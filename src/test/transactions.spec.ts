@@ -44,8 +44,6 @@ describe('Transactions routes', () => {
         type: 'credit',
       })
 
-    console.log(createTransactionResponse.body)
-
     const cookies = createTransactionResponse.get('Set-Cookie')
 
     const listTransactionsResponse = await request(app.server)
@@ -59,5 +57,66 @@ describe('Transactions routes', () => {
         amount: 4500,
       }),
     ])
+  })
+
+  test('o usuário consegue listar uma transação específica', async () => {
+    const createTransactionResponse = await request(app.server)
+      .post('/transactions')
+      .send({
+        title: 'New transaction',
+        amount: 4500,
+        type: 'credit',
+      })
+
+    const cookies = createTransactionResponse.get('Set-Cookie')
+
+    const listTransactionsResponse = await request(app.server)
+      .get('/transactions')
+      .set('Cookie', cookies)
+      .expect(200)
+
+    const transactionId = listTransactionsResponse.body.transactions[0].id
+
+    const getSpecificTransaction = await request(app.server)
+      .get(`/transactions/${transactionId}`)
+      .set('Cookie', cookies)
+      .expect(200)
+
+    expect(getSpecificTransaction.body.transaction).toEqual(
+      expect.objectContaining({
+        title: 'New transaction',
+        amount: 4500,
+      }),
+    )
+  })
+
+  test('o usuário consegue listar o seu resumo (saldo atual)', async () => {
+    const createTransactionResponse = await request(app.server)
+      .post('/transactions')
+      .send({
+        title: 'Credit transaction',
+        amount: 5000,
+        type: 'credit',
+      })
+
+    const cookies = createTransactionResponse.get('Set-Cookie')
+
+    await request(app.server)
+      .post('/transactions')
+      .set('Cookie', cookies)
+      .send({
+        title: 'Debit transaction',
+        amount: 2500,
+        type: 'debit',
+      })
+
+    const summaryResponse = await request(app.server)
+      .get('/transactions/summary')
+      .set('Cookie', cookies)
+      .expect(200)
+
+    expect(summaryResponse.body).toEqual({
+      ammount: 2500,
+    })
   })
 })
